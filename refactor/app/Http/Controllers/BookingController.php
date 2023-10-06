@@ -35,12 +35,13 @@ class BookingController extends Controller
      */
     public function index(Request $request)
     {
-        if($user_id = $request->get('user_id')) {
+
+        if($user_id = auth()->user()->id) {// if its behind auth otherwise user_id should be a uuid atleast
 
             $response = $this->repository->getUsersJobs($user_id);
 
         }
-        elseif($request->__authenticatedUser->user_type == env('ADMIN_ROLE_ID') || $request->__authenticatedUser->user_type == env('SUPERADMIN_ROLE_ID'))
+        elseif($request->user()->user_type == config('app.ADMIN_ROLE_ID') || $request->user()->user_type == config('app.SUPERADMIN_ROLE_ID'))
         {
             $response = $this->repository->getAll($request);
         }
@@ -67,7 +68,7 @@ class BookingController extends Controller
     {
         $data = $request->all();
 
-        $response = $this->repository->store($request->__authenticatedUser, $data);
+        $response = $this->repository->store($request->user(), array_except($data, ['_token', 'submit']));
 
         return response($response);
 
@@ -81,7 +82,7 @@ class BookingController extends Controller
     public function update($id, Request $request)
     {
         $data = $request->all();
-        $cuser = $request->__authenticatedUser;
+        $cuser = $request->user();
         $response = $this->repository->updateJob($id, array_except($data, ['_token', 'submit']), $cuser);
 
         return response($response);
@@ -107,7 +108,7 @@ class BookingController extends Controller
      */
     public function getHistory(Request $request)
     {
-        if($user_id = $request->get('user_id')) {
+        if($user_id = $request->get('user_id')) {// should be auth()->user()->id if this funtion's route is behind auth 
 
             $response = $this->repository->getUsersJobsHistory($user_id, $request);
             return response($response);
@@ -123,9 +124,9 @@ class BookingController extends Controller
     public function acceptJob(Request $request)
     {
         $data = $request->all();
-        $user = $request->__authenticatedUser;
+        $user = $request->user();
 
-        $response = $this->repository->acceptJob($data, $user);
+        $response = $this->repository->acceptJob(array_except($data, ['_token', 'submit']), $user);
 
         return response($response);
     }
@@ -133,7 +134,7 @@ class BookingController extends Controller
     public function acceptJobWithId(Request $request)
     {
         $data = $request->get('job_id');
-        $user = $request->__authenticatedUser;
+        $user = $request->user();
 
         $response = $this->repository->acceptJobWithId($data, $user);
 
@@ -147,9 +148,9 @@ class BookingController extends Controller
     public function cancelJob(Request $request)
     {
         $data = $request->all();
-        $user = $request->__authenticatedUser;
+        $user = $request->user();
 
-        $response = $this->repository->cancelJobAjax($data, $user);
+        $response = $this->repository->cancelJobAjax(array_except($data, ['_token', 'submit']), $user);
 
         return response($response);
     }
@@ -162,7 +163,7 @@ class BookingController extends Controller
     {
         $data = $request->all();
 
-        $response = $this->repository->endJob($data);
+        $response = $this->repository->endJob(array_except($data, ['_token', 'submit']));
 
         return response($response);
 
@@ -172,7 +173,7 @@ class BookingController extends Controller
     {
         $data = $request->all();
 
-        $response = $this->repository->customerNotCall($data);
+        $response = $this->repository->customerNotCall(array_except($data, ['_token', 'submit']));
 
         return response($response);
 

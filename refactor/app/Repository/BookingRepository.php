@@ -127,7 +127,7 @@ class BookingRepository extends BaseRepository
      */
     public function store($user, $data)
     {
-
+        $msg_fail = "Du måste fylla in alla fält"
         $immediatetime = 5;
         $consumer_type = $user->userMeta->consumer_type;
         if ($user->user_type == env('CUSTOMER_ROLE_ID')) {
@@ -135,20 +135,20 @@ class BookingRepository extends BaseRepository
 
             if (!isset($data['from_language_id'])) {
                 $response['status'] = 'fail';
-                $response['message'] = "Du måste fylla in alla fält";
+                $response['message'] = $msg_fail;
                 $response['field_name'] = "from_language_id";
                 return $response;
             }
             if ($data['immediate'] == 'no') {
                 if (isset($data['due_date']) && $data['due_date'] == '') {
                     $response['status'] = 'fail';
-                    $response['message'] = "Du måste fylla in alla fält";
+                    $response['message'] = $msg_fail;
                     $response['field_name'] = "due_date";
                     return $response;
                 }
                 if (isset($data['due_time']) && $data['due_time'] == '') {
                     $response['status'] = 'fail';
-                    $response['message'] = "Du måste fylla in alla fält";
+                    $response['message'] = $msg_fail;
                     $response['field_name'] = "due_time";
                     return $response;
                 }
@@ -160,14 +160,14 @@ class BookingRepository extends BaseRepository
                 }
                 if (isset($data['duration']) && $data['duration'] == '') {
                     $response['status'] = 'fail';
-                    $response['message'] = "Du måste fylla in alla fält";
+                    $response['message'] = $msg_fail;
                     $response['field_name'] = "duration";
                     return $response;
                 }
             } else {
                 if (isset($data['duration']) && $data['duration'] == '') {
                     $response['status'] = 'fail';
-                    $response['message'] = "Du måste fylla in alla fält";
+                    $response['message'] = $msg_fail;
                     $response['field_name'] = "duration";
                     return $response;
                 }
@@ -2051,19 +2051,21 @@ class BookingRepository extends BaseRepository
                 $allJobs->orderBy('jobs.created_at', 'desc');
             }
             if (isset($requestdata['filter_timetype']) && $requestdata['filter_timetype'] == "due") {
-                if (isset($requestdata['from']) && $requestdata['from'] != "") {
-                    $allJobs->where('jobs.due', '>=', $requestdata["from"])
-                        ->where('jobs.status', 'pending')
-                        ->where('jobs.ignore_expired', 0)
-                        ->where('jobs.due', '>=', Carbon::now());
+                $fromIsSet = isset($requestdata['from']) && $requestdata['from'] != "";
+                $toIsSet = isset($requestdata['to']) && $requestdata['to'] != "";
+                if ($fromIsSet) {
+                    $allJobs->where('jobs.due', '>=', $requestdata["from"])    
                 }
-                if (isset($requestdata['to']) && $requestdata['to'] != "") {
+                if ($toIsSet) {
                     $to = $requestdata["to"] . " 23:59:00";
                     $allJobs->where('jobs.due', '<=', $to)
-                        ->where('jobs.status', 'pending')
+                }
+                if($fromIsSet || $toIsSet){
+                    $allJobs->where('jobs.status', 'pending')
                         ->where('jobs.ignore_expired', 0)
                         ->where('jobs.due', '>=', Carbon::now());
                 }
+                        
                 $allJobs->orderBy('jobs.due', 'desc');
             }
 
